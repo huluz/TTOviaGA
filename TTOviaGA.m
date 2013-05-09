@@ -19,7 +19,7 @@ beta = 0.257/PreC - 0.533*TempC/PreC/Temp;	%AGA气体状态方程参数
 
 %管段参数
 Len = 100E3;			%管道长度，m
-Pin = 3.5E6;			%压缩机入口压力
+Pin = 4.5E6;			%压缩机入口压力
 lamda = 0.008;			%摩阻系数
 Din = 0.6096;			%管内径，m
 Area = 0.25*pi*Din^2;		%管段横截面积
@@ -92,9 +92,9 @@ Pressure_ini = Pressure_ini';		%压力
 
 %初始化参数
 NP = 50;			%种群规模
-Max_Gen = 60;		%最大遗传代数
+Max_Gen = 2;		%最大遗传代数
 PrePCoe = 1;			%管段末段压力罚因子
-MsPCoe = 1e2;			%管段沿线流量罚因子
+%MsPCoe = 1e2;			%管段沿线流量罚因子
 bits = 4;			%表示单个时段决策值需要的基因位数
 dq = (Qs_Max - Qs_Min)/(power(2, bits) - 1);	%可行域离散精度
 Total_bits = 4 * Time_Secs;	%基因长度
@@ -107,6 +107,7 @@ MaxConsum = 1e7;		%前一种群最大函数值
 GensPool = zeros(NP, Total_bits);	%基因池
 FitsWheel = zeros(NP, 1);	%转轮法参数
 MinObj = zeros(Max_Gen,1);	%记录每轮的最优目标函数值
+OptQs = zeros(Max_Gen,Time_Secs);	%最优方案
 OptRecs = zeros(Max_Gen,Total_bits);	%最优记录
 AverageObjV = zeros(Max_Gen,1);	%记录每轮的平均适应度值
 
@@ -164,18 +165,19 @@ while gen <= Max_Gen
 				MassFlux(j) = results(2*j-1);
 			end
 			Pressure(SpaceSteps+1) = results(2*SpaceSteps);
-			ComConsum = ComConsum + dt*MassFlux(1)*Area*(Pressure(1)/Pin)^0.8;	%计算压缩机功率
+			Quan_Temp = (0.328*Area/Den_sta)*MassFlux(1);
+			ComConsum = ComConsum + dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658);	%计算压缩机功率
 %			fprintf('%s%f\t', 'Compressor: ',dt*MassFlux(1)*Area*(Pressure(1)/Pin)^0.8);
 			if Pressure(SpaceSteps+1) < Pe_min
 				ComConsum = ComConsum + PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min);	%引入罚函数部分
 %				fprintf('%s%f\t', 'Pressure Punishment: ',PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min));
 			end
-			if min(MassFlux) < 0
-				inc = MassFlux < 0;	%质量流量小与零的索引
-				ComConsum = ComConsum + MsPCoe * abs(inc' * MassFlux);
+%			if min(MassFlux) < 0
+%				inc = MassFlux < 0;	%质量流量小与零的索引
+%				ComConsum = ComConsum + MsPCoe * abs(inc' * MassFlux);
 %				fprintf('%s%f\t', 'Quantity Punishment: ',MsPCoe * abs(inc' * MassFlux));
 %				fprintf('%d\n', inc' * MassFlux);
-			end
+%			end
 %			fprintf('\n');
 			if i < TimeSteps_Total
 				MassFlux(1) = Mss(i+1);	%引入边界条件
@@ -191,6 +193,15 @@ while gen <= Max_Gen
 	[Temp, MinRecNum] = max(ObjV);
 	fprintf('%s%e\n', 'Minimum Object Function Value: ', MinObj(gen));
 	OptRecs(gen,:) = Chromes(MinRecNum,:);	%最优记录
+	Qs_Opt_Gen = zeros(Time_Secs, 1);	%入口流量-整点处
+	for kk = 1:Time_Secs
+		dots = 0;			%离散点位置
+		for mm = 1:bits
+			dots = dots + power(2, Chromes(MinRecNum, bits*(kk - 1)+mm));
+		end
+		Qs_Opt_Gen(kk) = Qs_Min + dq*dots;
+	end
+	OptQs(gen,:) = Qs_Opt_Gen;			%记录最优方案
 	AverageObjV(gen) = mean(ObjV);		%平均目标函数值
 	fprintf('%s%e\n', 'Average Fitness: ', AverageObjV(gen));
 %	if mod(gen,10) == 0
