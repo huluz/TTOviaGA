@@ -270,10 +270,10 @@ while gen <= Max_Gen
 	end
 
 	%更新参数，准备下一轮计算
-%	MaxConsum_Temp = max(-1*(ObjV - MaxConsum - power(ades, gen)*delta));
-%	if MaxConsum_Temp < MaxConsum
-%		MaxConsum = MaxConsum_Temp;		%最大函数值，用于标定适应度函数
-%	end
+	MaxConsum_Temp = max(-1*(ObjV - MaxConsum - power(ades, gen)*delta));
+	if MaxConsum_Temp < MaxConsum
+		MaxConsum = (MaxConsum_Temp + MaxConsum) / 2;		%最大函数值，用于标定适应度函数
+	end
 	gen = gen + 1;			%增加遗传代数计数
 
 	%计算过程可视化
