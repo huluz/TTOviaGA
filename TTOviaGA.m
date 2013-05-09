@@ -91,15 +91,15 @@ Pressure_ini = Pressure_ini';		%压力
 %GA算法求解优化问题
 
 %初始化参数
+NP = 50;			%种群规模
+Max_Gen = 60;		%最大遗传代数
 PrePCoe = 1;			%管段末段压力罚因子
 MsPCoe = 1e2;			%管段沿线流量罚因子
 bits = 4;			%表示单个时段决策值需要的基因位数
 dq = (Qs_Max - Qs_Min)/(power(2, bits) - 1);	%可行域离散精度
 Total_bits = 4 * Time_Secs;	%基因长度
-NP = 150;			%种群规模
 PC = 0.9;			%交叉概率
 PM = 0.1;			%编译概率
-Max_Gen = 40;		%最大遗传代数
 gen = 1;			%种群代数
 ades = 0.96;			%适应度函数标定参数
 delta = 1e6;
@@ -121,15 +121,25 @@ while gen <= Max_Gen
 	fprintf('Generation: %d\n', gen);
 	tic;
 	ObjV = zeros(NP, 1);
-	fprintf('%s\n', 'Computing Fitness...');
+%	fprintf('%s\n', 'Computing Fitness...');
 	parfor nn = 1:NP
-		Qs = zeros(TimeSteps_Total, 1);	%入口流量
+		Qs_Temp = zeros(Time_Secs, 1);	%入口流量-整点处
 		for kk = 1:Time_Secs
 			dots = 0;			%离散点位置
 			for mm = 1:bits
 				dots = dots + power(2, Chromes(nn, bits*(kk - 1)+mm));
 			end
-			Qs(kk) = Qs_Min + dq*dots;
+			Qs_Temp(kk) = Qs_Min + dq*dots;
+		end
+		Qs = zeros(TimeSteps_Total,1);	%终点流量
+		for oo = 1:Time_Secs			%根据时间点上的值设定整个时间段的流量
+			for ee = 1:TimeSteps_Per_Sec
+				if oo == 1
+					Qs(TimeSteps_Per_Sec*(oo-1)+ee) = (Qs_Temp(oo)-Qs_Temp(Time_Secs))*ee/TimeSteps_Per_Sec + Qs_Temp(Time_Secs);
+				else
+					Qs(TimeSteps_Per_Sec*(oo-1)+ee) = (Qs_Temp(oo)-Qs_Temp(oo-1))*ee/TimeSteps_Per_Sec + Qs_Temp(oo-1);
+				end
+			end
 		end
 		Mss = (Den_sta/Area) * Qs;
 
@@ -179,15 +189,17 @@ while gen <= Max_Gen
 	end
 	MinObj(gen) = -1*(max(ObjV) - MaxConsum - power(ades, gen)*delta);	%最优目标函数值
 	[Temp, MinRecNum] = max(ObjV);
+	fprintf('%s%e\n', 'Minimum Object Function Value: ', MinObj(gen));
 	OptRecs(gen,:) = Chromes(MinRecNum,:);	%最优记录
 	AverageObjV(gen) = mean(ObjV);		%平均目标函数值
+	fprintf('%s%e\n', 'Average Fitness: ', AverageObjV(gen));
 %	if mod(gen,10) == 0
 %		plot(MinObj(1:gen));						%计算过程可视化
 %		plot(AverageFit(1:gen));
 %	end
 
 	%生成基因池-转轮法
-	fprintf('%s\n', 'Generating Genpool...');
+%	fprintf('%s\n', 'Generating Genpool...');
 	TotalFits = sum(ObjV);
 	FitsPro = ObjV / TotalFits;
 	for pp = 1:NP
@@ -211,7 +223,7 @@ while gen <= Max_Gen
 	end
 
 	%交叉
-	fprintf('Implementing Crossover...');
+%	fprintf('%s\n', Implementing Crossover...');
 	Chromes = zeros(NP, Total_bits);			%清空
 	for pp = 1:NP/2
 		gen1 = GensPool(round(1 + (NP - 1)*rand),:);	%抽取基因
@@ -232,7 +244,7 @@ while gen <= Max_Gen
 	end
 	
 	%变易
-	fprintf('%s\n', 'Implementing Mutation...');
+%	fprintf('%s\n', 'Implementing Mutation...');
 	for pp = 1:NP
 		MPro = rand;
 		if MPro < PM
