@@ -91,7 +91,7 @@ Pressure_ini = Pressure_ini';		%压力
 %GA算法求解优化问题
 
 %初始化参数
-NP = 50;			%种群规模
+NP = 10;			%种群规模
 Max_Gen = 10;			%最大遗传代数
 PrePCoe = 1e-2;		%管段末段压力罚因子
 %MsPCoe = 1e2;		%管段沿线流量罚因子
@@ -102,7 +102,7 @@ PC = 0.9;			%交叉概率
 PM = 0.1;			%编译概率
 gen = 1;			%种群代数
 ades = 0.96;			%适应度函数标定参数
-delta = 1e6;
+delta = 0;			%暂时设为零，以观察遗传算法的性状
 MaxConsum = 1e7;		%前一种群最大函数值
 GensPool = zeros(NP, Total_bits);	%基因池
 FitsWheel = zeros(NP, 1);	%转轮法参数
@@ -167,7 +167,11 @@ while gen <= Max_Gen
 			end
 			Pressure(SpaceSteps+1) = results(2*SpaceSteps);
 			Quan_Temp = (0.328*Area/Den_sta)*MassFlux(1);
-			ComConsum = ComConsum + dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658);	%计算压缩机功率
+			Sec_Com_Consum = dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658);			%该时步压缩机功率
+			if Sec_Com_Consum < 0
+				Sec_Com_Consum = 2e4;	%处理压缩机功率为负的情况
+			end
+			ComConsum = ComConsum + Sec_Com_Consum;	%计算压缩机功率
 %			fprintf('%s%f\n', 'Compressor: ',dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658));
 			if Pressure(SpaceSteps+1) < Pe_min
 				ComConsum = ComConsum + PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min);	%引入罚函数部分
