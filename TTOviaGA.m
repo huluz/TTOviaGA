@@ -92,9 +92,9 @@ Pressure_ini = Pressure_ini';		%压力
 
 %初始化参数
 NP = 50;			%种群规模
-Max_Gen = 2;		%最大遗传代数
-PrePCoe = 1;			%管段末段压力罚因子
-%MsPCoe = 1e2;			%管段沿线流量罚因子
+Max_Gen = 10;			%最大遗传代数
+PrePCoe = 1e-2;		%管段末段压力罚因子
+%MsPCoe = 1e2;		%管段沿线流量罚因子
 bits = 4;			%表示单个时段决策值需要的基因位数
 dq = (Qs_Max - Qs_Min)/(power(2, bits) - 1);	%可行域离散精度
 Total_bits = 4 * Time_Secs;	%基因长度
@@ -124,11 +124,12 @@ while gen <= Max_Gen
 	ObjV = zeros(NP, 1);
 %	fprintf('%s\n', 'Computing Fitness...');
 	parfor nn = 1:NP
+%		fprintf('%d\n', nn);
 		Qs_Temp = zeros(Time_Secs, 1);	%入口流量-整点处
 		for kk = 1:Time_Secs
 			dots = 0;			%离散点位置
 			for mm = 1:bits
-				dots = dots + power(2, Chromes(nn, bits*(kk - 1)+mm));
+				dots = dots + Chromes(nn, bits*(kk - 1)+mm)*power(2, 4 - mm);
 			end
 			Qs_Temp(kk) = Qs_Min + dq*dots;
 		end
@@ -167,10 +168,10 @@ while gen <= Max_Gen
 			Pressure(SpaceSteps+1) = results(2*SpaceSteps);
 			Quan_Temp = (0.328*Area/Den_sta)*MassFlux(1);
 			ComConsum = ComConsum + dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658);	%计算压缩机功率
-%			fprintf('%s%f\t', 'Compressor: ',dt*MassFlux(1)*Area*(Pressure(1)/Pin)^0.8);
+%			fprintf('%s%f\n', 'Compressor: ',dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658));
 			if Pressure(SpaceSteps+1) < Pe_min
 				ComConsum = ComConsum + PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min);	%引入罚函数部分
-%				fprintf('%s%f\t', 'Pressure Punishment: ',PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min));
+%				fprintf('%s%f\n', 'Pressure Punishment: ',PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min));
 			end
 %			if min(MassFlux) < 0
 %				inc = MassFlux < 0;	%质量流量小与零的索引
@@ -265,10 +266,10 @@ while gen <= Max_Gen
 	end
 
 	%更新参数，准备下一轮计算
-	MaxConsum_Temp = max(-1*(ObjV - MaxConsum - power(ades, gen)*delta));
-	if MaxConsum_Temp < MaxConsum
-		MaxConsum = MaxConsum_Temp;		%最大函数值，用于标定适应度函数
-	end
+%	MaxConsum_Temp = max(-1*(ObjV - MaxConsum - power(ades, gen)*delta));
+%	if MaxConsum_Temp < MaxConsum
+%		MaxConsum = MaxConsum_Temp;		%最大函数值，用于标定适应度函数
+%	end
 	gen = gen + 1;			%增加遗传代数计数
 
 	%计算过程可视化

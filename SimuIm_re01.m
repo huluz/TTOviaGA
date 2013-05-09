@@ -36,7 +36,7 @@ gama = 1;			%阻尼系数
 %边界条件
 Storage = zeros(TimeSteps_Total,1);		%管存量
 Qbasic = 65;           		 		%流量基数
-Qs_Opt = [65; 77; 53; 89; 65; 65; 101; 77; 77; 77; 77; 89; 77; 89; 89; 77; 77; 77; 89; 65; 89; 77; 89; 89];	%起点流量
+Qs_Opt = [89; 89; 65; 77; 77; 65; 65; 53; 65; 89; 89; 89; 65; 65; 89; 77; 89; 77; 65; 77; 77; 89; 53; 77];	%起点流量
 Qs = zeros(TimeSteps_Total,1);
 for ii = 1:Secs 					%根据时间点上的值设定整个时间段的流量
 	%Qe(TimeSteps_Per_Sec*(i-1)+1:TimeSteps_Per_Sec*i) = Qbasic*Ff(i)*ones(TimeSteps_Per_Sec,1);
