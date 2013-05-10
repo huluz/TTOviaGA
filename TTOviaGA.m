@@ -32,7 +32,7 @@ Ff = [0.2; 0.15; 0.1; 0.25; 0.35; 0.58; 1.2; 1.3; 1; 0.97; 0.85; 1.65; 2; 1; 0.8
 %计算参数
 Time = 24*3600;		%优化时间段，s
 Time_Per_Sec = 3600;		%流量边界条件设定时步，s
-dt = 15 * 60;			%时步，s
+dt = 10 * 60;			%时步，s
 Time_Secs = Time / Time_Per_Sec;	%时间段数
 TimeSteps_Total = Time / dt;	%总时步数
 TimeSteps_Per_Sec = Time_Per_Sec / dt;	%每个时间段包含的时步数
@@ -91,8 +91,8 @@ Pressure_ini = Pressure_ini';		%压力
 %GA算法求解优化问题
 
 %初始化参数
-NP = 10;			%种群规模
-Max_Gen = 10;			%最大遗传代数
+NP = 1;			%种群规模
+Max_Gen = 1;			%最大遗传代数
 PrePCoe = 1e-2;		%管段末段压力罚因子
 %MsPCoe = 1e2;		%管段沿线流量罚因子
 bits = 4;			%表示单个时段决策值需要的基因位数
@@ -133,6 +133,7 @@ while gen <= Max_Gen
 			end
 			Qs_Temp(kk) = Qs_Min + dq*dots;
 		end
+		Qs_Temp = [89; 65; 65; 89; 53; 65; 101; 65; 65; 77; 65; 65; 77; 101; 65; 65; 77; 65; 77; 65; 77; 89; 65; 89];
 		Qs = zeros(TimeSteps_Total,1);	%终点流量
 		for oo = 1:Time_Secs			%根据时间点上的值设定整个时间段的流量
 			for ee = 1:TimeSteps_Per_Sec
@@ -175,7 +176,7 @@ while gen <= Max_Gen
 %			fprintf('%s%f\n', 'Compressor: ',dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658));
 			if Pressure(SpaceSteps+1) < Pe_min
 				ComConsum = ComConsum + PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min);	%引入罚函数部分
-%				fprintf('%s%f\n', 'Pressure Punishment: ',PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min));
+				fprintf('%s%f\n', 'Pressure Punishment: ',PrePCoe*abs(Pressure(SpaceSteps+1) - Pe_min));
 			end
 %			if min(MassFlux) < 0
 %				inc = MassFlux < 0;	%质量流量小与零的索引
@@ -202,7 +203,7 @@ while gen <= Max_Gen
 	for kk = 1:Time_Secs
 		dots = 0;			%离散点位置
 		for mm = 1:bits
-			dots = dots + power(2, Chromes(MinRecNum, bits*(kk - 1)+mm));
+			dots = dots + Chromes(MinRecNum, bits*(kk - 1)+mm)*power(2, 4 - mm);
 		end
 		Qs_Opt_Gen(kk) = Qs_Min + dq*dots;
 	end
