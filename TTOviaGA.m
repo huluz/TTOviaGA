@@ -91,9 +91,9 @@ Pressure_ini = Pressure_ini';		%压力
 %GA算法求解优化问题
 
 %初始化参数
-NP = 1;			%种群规模
-Max_Gen = 1;			%最大遗传代数
-PrePCoe = 1e-2;		%管段末段压力罚因子
+NP = 10;			%种群规模
+Max_Gen = 10;			%最大遗传代数
+PrePCoe = 2e-2;		%管段末段压力罚因子
 %MsPCoe = 1e2;		%管段沿线流量罚因子
 bits = 4;			%表示单个时段决策值需要的基因位数
 dq = (Qs_Max - Qs_Min)/(power(2, bits) - 1);	%可行域离散精度
