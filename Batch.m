@@ -17,6 +17,14 @@ TTOviaGA_re01(ff,time,dt,qsmin,qsmax,qbasic,fn,bits,np,maxgen,pc,pm,prepcoe);
 load Slow_Ramping_24H_InitialData;
 TTOviaGA_re01(ff,time,dt,qsmin,qsmax,qbasic,fn,bits,np,maxgen,pc,pm,prepcoe);
 
+%长时间缓波动情况-扩大种群规模
+load Slow_Ramping_24H_InitialData_re01;
+TTOviaGA_re01(ff,time,dt,qsmin,qsmax,qbasic,fn,bits,np,maxgen,pc,pm,prepcoe);
+
 %长时间剧烈波动情况
 load Severe_Ramping_24H_InitialData;
+TTOviaGA_re01(ff,time,dt,qsmin,qsmax,qbasic,fn,bits,np,maxgen,pc,pm,prepcoe);
+
+%长时间剧烈波动情况
+load Severe_Ramping_24H_InitialData_re01;
 TTOviaGA_re01(ff,time,dt,qsmin,qsmax,qbasic,fn,bits,np,maxgen,pc,pm,prepcoe);
