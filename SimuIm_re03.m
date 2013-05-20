@@ -26,7 +26,7 @@ Din = 0.6096;           		%管段内径
 C0 = 0.03848;           		%稳态模拟公式系数
 Time_Sec = 3600;		%单个时间段时长
 Secs = Time/Time_Sec;	%时间段数目
-dt = 60 * 10;              		%时步
+dt = 60 * 5;              		%时步
 TimeSteps_Total = Time / dt; 	%总时步数
 TimeSteps_Per_Sec = Time_Sec / dt;		%每个时间段的步长数
 dx = 10E3;               		%空间步长
@@ -134,7 +134,7 @@ for i = 2:TimeSteps_Total+1
 	Storage(i) = Storage_Total;
 	Quan_Temp = (0.328*Area/Den_sta)*MassFlux(1);	%计算压缩机能耗
 	Sec_Com_Consum = dt*Quan_Temp*(2.682*(Pressure(1)/Pin)^0.217 - 2.658);			%该时步压缩机功率
-	Total_Com_Consum = Total_Com_Consum + Sec_Com_Consum
+	Total_Com_Consum = Total_Com_Consum + Sec_Com_Consum;
 	if mod(i,10) == 0
 		%计算过程图形化
 		figure(3);			%终点压力变化
